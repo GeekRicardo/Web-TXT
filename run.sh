@@ -1,5 +1,7 @@
 #!/bin/bash
+#获取当前文件目录
 path=$(dirname $(readlink -f "$0"))
+
 if [ ! -d ${path}/pid ]; then
     mkdir ${path}/pid
 fi
@@ -11,4 +13,4 @@ do
     rm ${path}/pid/${filename}
 done
 
-nohup python3 ${path}/main.py > /dev/null 2>&1 & echo  $! > ${path}/pid/$! |tee $!
+nohup sudo python3 ${path}/main.py > /dev/null 2>&1 & echo  $! > ${path}/pid/$! |tee $!
