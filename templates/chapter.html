@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zn_ch">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"  name="viewport" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ chapter.title }}</title>
+    <link rel="shortcut icon " type="images/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/clipboard.js/2.0.4/clipboard.min.js"></script>
+    <script>
+    $(function() {
+        setDayStyle();
+        $('.reload').click(function() {
+            location.reload();
+        });
+        $('#turnday').click(function(){
+            setDayStyle();
+        });
+        $('#fontup').click(function(){
+            var cssfontSize = $('pre').css('font-size');
+            var unit=cssfontSize.slice(-2);
+            var fontSize=parseFloat(cssfontSize);
+            $('pre').css('font-size', (fontSize + 2) + unit);
+            setFontsize(1);
+        })
+        $('#fontdown').click(function(){
+            var cssfontSize = $('pre').css('font-size');
+            var unit=cssfontSize.slice(-2);
+            var fontSize=parseFloat(cssfontSize);
+            $('pre').css('font-size', (fontSize - 2) + unit);
+            setFontsize(0);
+        })
+
+        function setFontsize(size){
+            $.ajax({
+                url: '/setfont/' + size,
+                method: 'GET',
+            })
+        }
+
+        function setDay(isDay){
+            if(isDay == 'true'){
+                $.ajax({
+                    url: '/setDay/1',
+                    type: 'GET'
+                })
+            }else if(idDay=='false'){
+                $.ajax({
+                    url: '/setDay/0',
+                    type: 'GET'
+                })
+            }
+        }
+        function setDayStyle(){
+            isDay = $('#turnday').attr('day');
+            if(isDay == 'true'){
+                //切换成黑夜模式
+                $("body").css("backgroundColor","#000");
+                $(".jumbotron").css("backgroundColor","#0d0d0d");
+                $("pre").css("color","#737373");
+                $('#turnday').css('background-color', '#e7e7e7');
+                $('#turnday').css('color', 'black');
+                $('#turnday').attr('day', false);
+                $('#turnday').text('白天模式');
+                $.ajax({
+                    url: '/setDay/0',
+                    type: 'GET'
+                })
+            }else if(isDay== 'false'){
+                //切换成白天模式
+                $("body").css("backgroundColor","#fff");
+                $(".jumbotron").css("backgroundColor","#f2f2f2");
+                $('#turnday').attr('day', true);
+                $('#turnday').css('background-color', '#555555');
+                $('#turnday').text('夜晚模式');
+                $.ajax({
+                    url: '/setDay/1',
+                    type: 'GET'
+                })
+            }
+        }
+        $(window).scroll(function () {
+            if ($(window).scrollTop() >= 200) {
+                $('#toTop').fadeIn();
+            }
+            else {
+                $('#toTop').fadeOut();
+            }
+        });
+        $('#toTop').click(function(){
+            $('html,body').animate({ scrollTop: 0 }, 500);
+        });
+    })
+    </script>
+    <style>
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .jumbotron {
+        width: 100%;
+        padding: 5px;
+        /*height: 100%;*/
+    }
+
+    .oper {
+        position: fixed;
+        top: 50%;
+        right: 1%;
+        z-index: 999;
+    }
+    button {
+        margin: 5px;
+    }
+    pre {
+        white-space: pre-wrap;
+        font-size: 18px;
+        text-indent:2em;
+    }
+    #turnday {
+        background-color: #555555;
+        color: white;
+    }
+    #fontdown {
+        font-size: small;
+    }
+    #fontup {
+        font-size: large;
+    }
+    </style>
+</head>
+
+<body>
+    <a href="/catalog/{{txtid}}" title=""><button class="btn btn-primary">回到目录</button></a>
+    <!-- <button id='btn' class="btn btn-success reload">刷新一下</button> -->
+    <button class='btn' id='turnday' day={{isDay}}>夜间模式</button>
+    <button class="btn-sm fontsize" id='fontdown'>▽</button>
+    <button class="btn-sm fontsize" id='fontup'>△</button>
+    <div class="jumbotron">
+        <div class="oper">
+            
+        </div>
+
+        <h3>{{ chapter.title }}</h3>
+        <pre id='pre' class='notranslate' style='font-size:{{fontsize}}px;'>
+{% for line in chapter.content%}
+{{line}}{% endfor %}
+                        <button id='toTop' class="btn-sm btn-info">回到顶部</button>
+        </pre>
+        <a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a>
+        <a href="/show/{{txtid}}/{{chapter.id + 1}}"><button class='btn-lg btn-success' style="float:right">下一章</button></a>
+    </div>
+</body>
+
+</html>

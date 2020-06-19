@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zn_ch">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"  name="viewport" />
+    <title>{{txt.title}} - {{txt.author}}</title>
+    <link rel="shortcut icon " type="images/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="static/dialog/dialog.css"> -->
+    <!-- <link rel="stylesheet" href="static/layui.css"> -->
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <!-- <script src="static/dialog/dialog.js"></script> -->
+    <!-- <script src="static/layui.js"></script> -->
+    <script>
+        !function setDayStyle(){
+            isDay = $('#isDay').val();
+            if(isDay == 'false'){
+                //切换成黑夜模式
+                $("body").css("backgroundColor","#000");
+            }else if(isDay== 'true'){
+                //切换成白天模式
+                $("body").css("backgroundColor","#fff");
+            }
+    </script>
+    <style>
+        .container {
+            position: relative;
+            padding-top: 5%;
+            padding-left: 2%;
+            padding-right: 2%;
+            margin-left: 10%;
+            
+        }
+
+        .list-group {
+            width: 120%;
+        }
+
+        .info {
+            /*margin-left: 30%;*/
+            float: right;
+        }
+
+        .time {
+            margin-right: 5%;
+            float: right;
+        }
+
+        .filename {
+            width: 30%;
+            margin-right: 3%;
+        }
+
+        .oper {
+            position: fixed;
+            top: 10%;
+            left: 1%;
+            z-index: 999;
+        }
+
+        .oper button {
+            margin: 5px;
+        }
+
+        li {
+            position: relative;
+        }
+
+        .delbtn {
+            position: absolute;
+            right: 20%;
+            top: 3px;
+        }
+
+        #imgs {
+            width: 20%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="hidden" id='isDay' value='{{isDay}}'>
+    <div class="container">
+        <div class="oper">
+            <h3>目录</h3>
+            <a href="/" title="">
+                <button class="btn btn-primary">回到首页</button>
+            </a><br>
+            <button id='btn' class="btn btn-success">刷新一下</button>
+        </div>
+        <!-- <button id="download">下一章</button> -->
+        <ul class="list-group">
+            {% for catalog in catalogs %}
+            <a href="/show/{{txt.id}}/{{catalog.id}}">
+                <li class="list-group-item" ">
+                    {{catalog.title}}
+                </li>
+            </a>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
