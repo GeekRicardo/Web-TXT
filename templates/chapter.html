@@ -153,10 +153,10 @@
         <pre id='pre' class='notranslate' style='font-size:{{fontsize}}px;'>
 {% for line in chapter.content%}
 {{line}}{% endfor %}
-                        <button id='toTop' class="btn-sm btn-info">回到顶部</button>
+<button id='toTop' class="btn-sm btn-info" style="float:right">回到顶部</button>
+
+<a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a><a href="/show/{{txtid}}/{{chapter.id + 1}}"><button class='btn-lg btn-success' style="float:right">下一章</button></a>
         </pre>
-        <a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a>
-        <a href="/show/{{txtid}}/{{chapter.id + 1}}"><button class='btn-lg btn-success' style="float:right">下一章</button></a>
     </div>
 </body>
 

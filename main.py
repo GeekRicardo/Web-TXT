@@ -99,6 +99,7 @@ def parseTxt(txt):
     txtTitle = txt.split('.txt')[0]
     txtObj = db.session.query(TXT).filter_by(title = txtTitle).first()
     if not txtObj:
+        txtObj = TXT()
         txtObj.title = txtTitle
         db.session.add(txtObj)
         db.session.commit()
