@@ -143,6 +143,8 @@ def showChapter(txtid, chapterid):
         chapter.content = chapter.content.split('\n')
         global isDay
         global fontsize
+        redis.set('txtid', txtid)
+        redis.set('chapterid', chapterid)
         return render_template('chapter.html', chapter=chapter, txtid=txtid, isDay=isDay, fontsize=fontsize)
     else:
         return render_template('index.html', msg='错误✖.')
