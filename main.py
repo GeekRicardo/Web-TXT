@@ -12,7 +12,7 @@
 from flask import Flask, request, render_template, make_response, send_from_directory, redirect, url_for, session, jsonify, Response
 from flask_dropzone import Dropzone
 # from flask_paginate import Pagination
-from datetime import timedelta
+import datetime
 import os
 
 from redis import Redis
@@ -25,7 +25,7 @@ redis = Redis(host='ali.sshug.cn', db=8, decode_responses=True)
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = "mysql://root:ricardo@ali.sshug.cn:3307/Ricardo?charset=utf8"
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=5)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = datetime.timedelta(seconds=5)
 app.secret_key = 's82;asdf4idsdf'
 app.config['SESSION_TYPE'] = 'filesystem'
 
@@ -145,31 +145,35 @@ def showChapter(txtid, chapterid):
         global fontsize
         redis.set('txtid', txtid)
         redis.set('chapterid', chapterid)
-        return render_template('chapter.html', chapter=chapter, txtid=txtid, isDay=isDay, fontsize=fontsize)
+        isScroll = request.cookies.get('play') or 'stop'
+        isDay = 'false' if request.cookies.get('isDay') == 'true' or request.cookies.get('isDay') == None else 'true'
+        fontsize = request.cookies.get('size') or '18'
+        return render_template('chapter.html', chapter=chapter, txtid=txtid, isDay=isDay, fontsize=fontsize, play=isScroll)
     else:
         return render_template('index.html', msg='错误✖.')
 
-@app.route('/setDay/<int:day>', endpoint='setDayStat')
+@app.route('/setDay/<day>', endpoint='setDayStat')
 @login_require
 def setDayStat(day):
-    global isDay
-    if(day == 1 ):
-        isDay = 'false'
-    elif(day == 0):
-        isDay = 'true'
-    return str(isDay)
+    res = make_response(day)
+    res.set_cookie('isDay', day)
+    return res
 
 
 @app.route('/setfont/<int:size>', endpoint='setFontSize')
 @login_require
 def setFontSize(size):
-    global fontsize
-    if(size == 1 ):
-        fontsize += 2
-    elif(size == 0):
-        fontsize -= 2
-    return str(fontsize)
+    res = make_response(str(size))
+    res.set_cookie('size', str(size))
+    return res
 
+@app.route('/setScroll/<isScroll>', endpoint='setScroll')
+@login_require
+def setScroll(isScroll):
+    res = make_response('')
+    outdate=datetime.datetime.today() + datetime.timedelta(days=300)
+    res.set_cookie('play', isScroll)
+    return res
 
 @app.route('/favicon.ico')
 def icon():
