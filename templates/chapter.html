@@ -17,6 +17,19 @@
         document.oncontextmenu = function(){
             event.returnValue = false;
         };
+        var isLoad = false;
+        $(window).scroll(function(){
+            　　var scrollTop = $(this).scrollTop();
+            　　var scrollHeight = $(document).height();
+            　　var windowHeight = $(this).height();
+            　　if(scrollHeight - scrollTop - windowHeight <= -10 && isLoad == false){
+                    isLoad = true;
+                    var curr = $('pre');
+                    var next = $('<i class="layui-icon layui-icon-loading layui-icon layui-anim layui-anim-rotate layui-anim-loop" style="color:gray;font-size: 6em;margin-left:40%;"></i>');
+                    curr.after(next);
+                    setTimeout(function(){$('#nextbtn').click()}, 500);
+            　　}
+            });
         setDayStyle();
         $('.reload').click(function() {
             location.reload();
@@ -29,14 +42,14 @@
             var unit=cssfontSize.slice(-2);
             var fontSize=parseFloat(cssfontSize);
             $('pre').css('font-size', (fontSize + 2) + unit);
-            setFontsize(1);
+            setFontsize(fontSize + 2);
         })
         $('#fontdown').click(function(){
             var cssfontSize = $('pre').css('font-size');
             var unit=cssfontSize.slice(-2);
             var fontSize=parseFloat(cssfontSize);
             $('pre').css('font-size', (fontSize - 2) + unit);
-            setFontsize(0);
+            setFontsize(fontSize - 2);
         })
 
         function setFontsize(size){
@@ -45,7 +58,6 @@
                 method: 'GET',
             })
         }
-
         function setDay(isDay){
             if(isDay == 'true'){
                 $.ajax({
@@ -73,20 +85,21 @@
                 $('#turnday').attr('day', false);
                 $('#turnday').text('白天模式');
                 $.ajax({
-                    url: '/setDay/0',
+                    url: '/setDay/false',
                     type: 'GET'
                 })
             }else if(isDay== 'false'){
                 //切换成白天模式
                 $("body").css("backgroundColor","#f2f2f2");
                 $(".jumbotron").css("backgroundColor","#f2f2f2");
+                $(".mainoper").css("backgroundColor","#f2f2f2");
                 $('.fontsize').css('color', 'black');
                 $('#turnday').attr('day', true);
                 $('#turnday').css('background-color', '#555555');
                 $('#turnday').css('color', '#939392');
                 $('#turnday').text('夜晚模式');
                 $.ajax({
-                    url: '/setDay/1',
+                    url: '/setDay/true',
                     type: 'GET'
                 })
             }
@@ -114,10 +127,27 @@
             }  
         }
         var timer;
-        autoscroll();
+        setTimeout(autoscroll, 3000);
         $('#scroll').click(function(){
             autoscroll();
         });
+        document.addEventListener("touchmove", function(e){
+            var icon = $('#scroll');
+            icon.removeClass('layui-icon-radio');
+            icon.addClass('layui-icon-circle-dot');
+            clearInterval(timer);
+        }, false);
+        document.addEventListener("touchend", function(e) {
+            var icon = $('#scroll');
+            if(icon.attr('play') == 'played'){
+                icon.removeClass('layui-icon-play');
+                icon.addClass('layui-icon-radio');
+                icon.css('color', '#ff5500');
+                clearInterval(timer);
+                timer = setInterval(scroller,20);
+            }else{
+            }
+        }, false);
         function autoscroll(){
             var icon = $('#scroll');
             if(icon.attr('play') == 'stop'){
@@ -125,15 +155,27 @@
                 icon.addClass('layui-icon-radio');
                 icon.attr('play', 'played');
                 icon.css('color', '#ff5500');
-                timer = setInterval(scroller,10);
+                clearInterval(timer);
+                timer = setInterval(scroller,20);
+                $.ajax({
+                    url: '/setScroll/stop',
+                    type: 'GET'
+                });
             }else if(icon.attr('play') == 'played'){
                 icon.removeClass('layui-icon-radio');
                 icon.addClass('layui-icon-play');
                 icon.attr('play', 'stop');
                 icon.css('color', '#00ff00');
                 clearInterval(timer);
+                $.ajax({
+                    url: '/setScroll/played',
+                    type: 'GET'
+                });
             }
-        }
+        };
+        //$('body').dblclick(function(){
+        //    autoscroll();
+        //})
     })
     </script>
     <style>
@@ -217,7 +259,7 @@
         <button class='btn' id='turnday' day={{isDay}}>夜间模式</button>
         <button class="btn-sm fontsize" id='fontdown'>▽</button>
         <button class="btn-sm fontsize" id='fontup'>△</button>
-        <button class="btn-sm fontsize" id='play'><i id='scroll' play='stop' class="layui-icon layui-icon-play"></i></button>
+        <button class="btn-sm fontsize" id='play'><i id='scroll' play='{{play}}' class="layui-icon layui-icon-play"></i></button>
     </div>
     <div class=" col-md-6 col-md-offset-3 jumbotron">
         <div class="oper">
@@ -230,7 +272,7 @@
 {{line}}{% endfor %}
 <button id='toTop' class="btn-sm btn-info" style="float:right">回到顶部</button>
 
-<a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a><a href="/show/{{txtid}}/{{chapter.id + 1}}"><button class='btn-lg btn-success' style="float:right">下一章</button></a>
+<a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a><a href="/show/{{txtid}}/{{chapter.id + 1}}" id='next'><button class='btn-lg btn-success' id='nextbtn' style="float:right">下一章</button></a>
         </pre>
     </div>
 </body>
