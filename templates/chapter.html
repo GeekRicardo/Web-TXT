@@ -3,278 +3,380 @@
 
 <head>
     <meta charset="utf-8">
-    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"  name="viewport" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{{ chapter.title }}</title>
     <link rel="shortcut icon " type="images/x-icon" href="/static/favicon.ico">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/layui.css">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
-    <script src="https://cdn.bootcss.com/clipboard.js/2.0.4/clipboard.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdn.bootcss.com/clipboard.js/2.0.4/clipboard.min.js"></script> -->
     <script>
-    $(function() {
-        document.oncontextmenu = function(){
-            event.returnValue = false;
-        };
-        var isLoad = false;
-        $(window).scroll(function(){
-            　　var scrollTop = $(this).scrollTop();
-            　　var scrollHeight = $(document).height();
-            　　var windowHeight = $(this).height();
-            　　if(scrollHeight - scrollTop - windowHeight <= -10 && isLoad == false){
-                    isLoad = true;
-                    var curr = $('pre');
-                    var next = $('<i class="layui-icon layui-icon-loading layui-icon layui-anim layui-anim-rotate layui-anim-loop" style="color:gray;font-size: 6em;margin-left:40%;"></i>');
-                    curr.after(next);
-                    setTimeout(function(){$('#nextbtn').click()}, 500);
-            　　}
-            });
-        setDayStyle();
-        $('.reload').click(function() {
-            location.reload();
-        });
-        $('#turnday').click(function(){
+        $(function () {
+            if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+                //移动端
+            } else {
+                //pc端
+                var p1, p2;
+                var isSlip = false;
+                $('html').mousedown(function (e) {
+                    if (e.button == 0) {
+                        p1 = [e.pageX, e.pageY];
+                        //console.log(e);
+                        isSlip = true;
+                    }
+                });
+                $('html').mouseup(function (e) {
+                    if (e.button == 0) {
+                        p2 = [e.pageX, e.pageY];
+                        //console.log(p2);
+                        if (isSlip) {
+                            if (p2[0] - p1[0] >= 100 && p2[1] - p1[1] <= 100) {
+
+                                $('#nextbtn').click();
+                            } else if (p1[0] - p2[0] >= 100 && p1[1] - p2[1] <= 100) {
+                                $('#prebtn').click();
+                            }
+                        }
+                        isSlip = false;
+                    }
+                });
+            }
+            //禁止右键菜单
+            document.oncontextmenu = function () {
+                event.returnValue = false;
+            };
+
+            var isLoad = false;
             setDayStyle();
-        });
-        $('#fontup').click(function(){
-            var cssfontSize = $('pre').css('font-size');
-            var unit=cssfontSize.slice(-2);
-            var fontSize=parseFloat(cssfontSize);
-            $('pre').css('font-size', (fontSize + 2) + unit);
-            setFontsize(fontSize + 2);
-        })
-        $('#fontdown').click(function(){
-            var cssfontSize = $('pre').css('font-size');
-            var unit=cssfontSize.slice(-2);
-            var fontSize=parseFloat(cssfontSize);
-            $('pre').css('font-size', (fontSize - 2) + unit);
-            setFontsize(fontSize - 2);
-        })
-
-        function setFontsize(size){
-            $.ajax({
-                url: '/setfont/' + size,
-                method: 'GET',
+            var timer;
+            setTimeout(autoscroll, 3000);
+            //滚动最后自动加载下一章
+            $(window).scroll(function () {
+                
+                //getNextChapter();
+                var scrollTop = $(this).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(this).height();
+                var restHeight = scrollHeight - scrollTop - windowHeight;
+                if (restHeight <= 100 && isLoad == false) {
+                    $('.waitnextchapter').show();
+                    var currid = $('#currid');
+                    var curr = parseInt(currid.val());
+                    isLoad = true;
+                    $.ajax({
+                        url: '/show/{{txtid}}/' + (curr + 1) ,
+                        type: 'POST',
+                        success: function(data){
+                            if(data.success == 0){
+                                let nextpre = $('pre:last').clone(true);
+                                let nexttitle = $('<h3>' + data.title + '</h3>').css('margin', '20px');
+                                document.title = data.title;
+                                nextpre.text(data.content);
+                                nextpre.attr('id', '' + (curr + 1));
+                                $('#' + curr).after(nextpre);
+                                $('#' + curr).after(nexttitle);
+                                //修改下一章按钮链接
+                                var nexta = $('#next');
+                                $('#preC').attr('href', nexta.attr('href'));
+                                nexta.attr('href', '/show/{{txtid}}/' + (curr + 2));
+                                currid.val(curr + 1)
+                                //修改地址栏
+                                var stateObject = {};
+                                var title = data.title;
+                                var newUrl = "/show/{{txtid}}/" + (curr + 1);//修改从项目名后开始
+                                history.pushState(stateObject,title,newUrl);
+                            }
+                            $('.waitnextchapter').hide();
+                        }
+                    })
+                }else if(restHeight > 100 && isLoad == true){
+                    isLoad = false;
+                }
+            });
+            
+            $('#turnday').click(function () {
+                setDayStyle();
+            });
+            
+            $('#fontup').click(function () {
+                var cssfontSize = $('pre').css('font-size');
+                var unit = cssfontSize.slice(-2);
+                var fontSize = parseFloat(cssfontSize);
+                $('pre').css('font-size', (fontSize + 2) + unit);
+                setFontsize(fontSize + 2);
             })
-        }
-        function setDay(isDay){
-            if(isDay == 'true'){
+            
+            $('#fontdown').click(function () {
+                var cssfontSize = $('pre').css('font-size');
+                var unit = cssfontSize.slice(-2);
+                var fontSize = parseFloat(cssfontSize);
+                $('pre').css('font-size', (fontSize - 2) + unit);
+                setFontsize(fontSize - 2);
+            })
+
+            function setFontsize(size) {
                 $.ajax({
-                    url: '/setDay/1',
-                    type: 'GET'
-                })
-            }else if(idDay=='false'){
-                $.ajax({
-                    url: '/setDay/0',
-                    type: 'GET'
-                })
-            }
-        }
-        function setDayStyle(){
-            isDay = $('#turnday').attr('day');
-            if(isDay == 'true'){
-                //切换成黑夜模式
-                $("body").css("backgroundColor","#000");
-                $(".jumbotron").css("backgroundColor","#0d0d0d");
-                $(".mainoper").css("backgroundColor","#0d0d0d");
-                $("pre").css("color","#737373");
-                $('.fontsize').css('color', '#939392');
-                $('#turnday').css('background-color', '#e7e7e7');
-                $('#turnday').css('color', 'black');
-                $('#turnday').attr('day', false);
-                $('#turnday').text('白天模式');
-                $.ajax({
-                    url: '/setDay/false',
-                    type: 'GET'
-                })
-            }else if(isDay== 'false'){
-                //切换成白天模式
-                $("body").css("backgroundColor","#f2f2f2");
-                $(".jumbotron").css("backgroundColor","#f2f2f2");
-                $(".mainoper").css("backgroundColor","#f2f2f2");
-                $('.fontsize').css('color', 'black');
-                $('#turnday').attr('day', true);
-                $('#turnday').css('background-color', '#555555');
-                $('#turnday').css('color', '#939392');
-                $('#turnday').text('夜晚模式');
-                $.ajax({
-                    url: '/setDay/true',
-                    type: 'GET'
+                    url: '/setfont/' + size,
+                    method: 'GET',
                 })
             }
-        }
-        $(window).scroll(function () {
-            if ($(window).scrollTop() >= 200) {
-                $('#toTop').fadeIn();
+            
+            function setDay(isDay) {
+                if (isDay == 'true') {
+                    $.ajax({
+                        url: '/setDay/1',
+                        type: 'GET'
+                    })
+                } else if (idDay == 'false') {
+                    $.ajax({
+                        url: '/setDay/0',
+                        type: 'GET'
+                    })
+                }
             }
-            else {
-                $('#toTop').fadeOut();
+            
+            function setDayStyle() {
+                isDay = $('#turnday').attr('day');
+                if (isDay == 'true') {
+                    //切换成黑夜模式
+                    $("html").css("backgroundColor", "#000");
+                    $(".jumbotron").css("backgroundColor", "#0d0d0d");
+                    $(".mainoper").css("backgroundColor", "#0d0d0d");
+                    $("pre").css("backgroundColor", "#0d0d0d");
+                    $("pre").css("color", "#737373");
+                    $('.fontsize').css('color', '#939392');
+                    $('#turnday').css('background-color', '#e7e7e7');
+                    $('#turnday').css('color', 'black');
+                    $('#turnday').attr('day', false);
+                    $('#dayimg').attr('src', '/static/imgs/day.png');
+                    $.ajax({
+                        url: '/setDay/false',
+                        type: 'GET'
+                    })
+                } else if (isDay == 'false') {
+                    //切换成白天模式
+                    $("body").css("backgroundColor", "#f2f2f2");
+                    $(".jumbotron").css("backgroundColor", "#f2f2f2");
+                    $(".mainoper").css("backgroundColor", "#f2f2f2");
+                    $("pre").css("backgroundColor", "#d9d9d9");
+                    $('.fontsize').css('color', 'black');
+                    $('#turnday').attr('day', true);
+                    $('#turnday').css('background-color', '#555555');
+                    $('#turnday').css('color', '#939392');
+                    $('#dayimg').attr('src', '/static/imgs/dark.png');
+                    $.ajax({
+                        url: '/setDay/true',
+                        type: 'GET'
+                    })
+                }
             }
-        });
-        $('#toTop').click(function(){
-            $('html,body').animate({ scrollTop: 0 }, 500);
-        });
-        
-        function scroller(){
-            //  自动滚动
-            if(true)
-            {  
-                yScroll = document.documentElement.scrollTop;
-                xScroll = document.documentElement.scrollLeft;
-                position = yScroll + 1;
-                scroll(xScroll, position);
-            }  
-        }
-        var timer;
-        setTimeout(autoscroll, 3000);
-        $('#scroll').click(function(){
-            autoscroll();
-        });
-        document.addEventListener("touchmove", function(e){
-            var icon = $('#scroll');
-            icon.removeClass('layui-icon-radio');
-            icon.addClass('layui-icon-circle-dot');
-            clearInterval(timer);
-        }, false);
-        document.addEventListener("touchend", function(e) {
-            var icon = $('#scroll');
-            if(icon.attr('play') == 'played'){
-                icon.removeClass('layui-icon-play');
-                icon.addClass('layui-icon-radio');
-                icon.css('color', '#ff5500');
-                clearInterval(timer);
-                timer = setInterval(scroller,20);
-            }else{
+
+            $('#toTop').click(function () {
+                $('html,body').animate({ scrollTop: 0 }, 500);
+            });
+
+            function scroller() {
+                //  自动滚动
+                if (true) {
+                    yScroll = document.documentElement.scrollTop;
+                    xScroll = document.documentElement.scrollLeft;
+                    position = yScroll + 1;
+                    scroll(xScroll, position);
+                }
             }
-        }, false);
-        function autoscroll(){
-            var icon = $('#scroll');
-            if(icon.attr('play') == 'stop'){
-                icon.removeClass('layui-icon-play');
-                icon.addClass('layui-icon-radio');
-                icon.attr('play', 'played');
-                icon.css('color', '#ff5500');
-                clearInterval(timer);
-                timer = setInterval(scroller,20);
-                $.ajax({
-                    url: '/setScroll/stop',
-                    type: 'GET'
-                });
-            }else if(icon.attr('play') == 'played'){
+
+            $('#play').click(function () {
+                autoscroll();
+            });
+
+            document.addEventListener("touchmove", function (e) {
+                var icon = $('#scroll');
                 icon.removeClass('layui-icon-radio');
-                icon.addClass('layui-icon-play');
-                icon.attr('play', 'stop');
-                icon.css('color', '#00ff00');
+                icon.addClass('layui-icon-circle-dot');
                 clearInterval(timer);
-                $.ajax({
-                    url: '/setScroll/played',
-                    type: 'GET'
-                });
+            }, false);
+
+            document.addEventListener("touchend", function (e) {
+                var icon = $('#scroll');
+                if (icon.attr('play') == 'played') {
+                    icon.removeClass('layui-icon-play');
+                    icon.addClass('layui-icon-radio');
+                    icon.css('color', '#ff5500');
+                    clearInterval(timer);
+                    timer = setInterval(scroller, 20);
+                } else {
+                }
+            }, false);
+            //后台唤醒自动刷新最新章节
+            /*document.addEventListener("visibilitychange", function() {
+                if(!document.hidden ){
+                    window.location.href = '/show/{{txtid}}/-1'
+                }
+            });*/
+
+            //移动端禁止双指缩放
+            document.addEventListener('gesturestart', function (event) {
+                event.preventDefault();
+            });
+            
+            function autoscroll() {
+                var icon = $('#scroll');
+                if (icon.attr('play') == 'stop') {
+                    icon.removeClass('layui-icon-play');
+                    icon.addClass('layui-icon-radio');
+                    icon.attr('play', 'played');
+                    icon.css('color', '#ff3333');
+                    clearInterval(timer);
+                    timer = setInterval(scroller, 20);
+                    $.ajax({
+                        url: '/setScroll/stop',
+                        type: 'GET'
+                    });
+                } else if (icon.attr('play') == 'played') {
+                    icon.removeClass('layui-icon-radio');
+                    icon.addClass('layui-icon-play');
+                    icon.attr('play', 'stop');
+                    icon.css('color', '#8c1aff');
+                    clearInterval(timer);
+                    $.ajax({
+                        url: '/setScroll/played',
+                        type: 'GET'
+                    });
+                }
+                
             }
-        };
-        //$('body').dblclick(function(){
-        //    autoscroll();
-        //})
-    })
+
+        })
     </script>
+<!-- -------------- -->
     <style>
-    html, body {
-        width: 100%;
-        height: 100%;
-        /*padding-left: 5px;
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            /*padding-left: 5px;
         padding-right: 5px;*/
-    }
+            -moz-user-select: none;
+            /*火狐*/
+            -webkit-user-select: none;
+            /*webkit浏览器*/
+            -ms-user-select: none;
+            /*IE10*/
+            -khtml-user-select: none;
+            /*早期浏览器*/
+            user-select: none;
+        }
 
-    .jumbotron {
-        width: 100%;
-        padding: 5px;
-        margin: auto auto;
-        margin-top: 50px;
-        /*height: 100%;*/
-        z-index: 99;
-    }
+        .jumbotron {
+            /*width: 100%;
+            padding: 5px;
+            margin: auto auto;
+            margin-top: 30%;
+            height: 100%;*/
+            z-index: 99;
+        }
 
-    .oper {
-        position: fixed;
-        top: 50%;
-        right: 1%;
-        z-index: 100;
-    }
+        .oper {
+            position: fixed;
+            top: 50%;
+            right: 1%;
+            z-index: 100;
+        }
 
-    .mainoper {
-        width: 100%;
-        position: fixed;
-        top: 0;
-        margin: auto auto;
-        margin-left: -5px;
-        padding-left: 1%;
-        padding-right: 1%;
-        z-index: 999;
-        background-color: #f2f2f2;
-    }
+        .mainoper {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            margin: auto auto;
+            padding-left: 1%;
+            padding-bottom: 5px;
+            z-index: 999;
+            background-color: #f2f2f2;
+        }
 
-    button {
-        margin: 5px;
-    }
+        button {
+            margin-left: 3px;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
 
-    pre {
-        white-space: pre-wrap;
-        font-size: 18px;
-        text-indent:2em;
-        padding: 1rem;
-        border: #88C6E5 solid 1px;
-        font-family: 方正启体简体,"Microsoft YaHei",微软雅黑,宋体;
-    }
+        pre {
+            white-space: pre-wrap;
+            font-size: 18px;
+            /*text-indent: 2em;*/
+            padding: 1rem;
+            border: #ff9999 solid 1px;
+            font-family: 方正启体简体, "Microsoft YaHei", 微软雅黑, 宋体;
+        }
 
-    h3 {
-        text-align: center;
-    }
-    
-    #turnday {
-        background-color: #555555;
-        color: white;
-    }
-    #fontdown {
-        font-size: small;
-        padding:9px;
-    }
-    #fontup {
-        font-size: large;
-        padding-bottom: 6px;
-    }
-    #play {
-        font-size: large;
-        padding-bottom: 6px;
-    }
-    .layui-icon {
-        color: #00ff00;
-    }
+        p {
+            font-family: 方正启体简体, "Microsoft YaHei", 微软雅黑, 宋体;
+        }
+
+        h3 {
+            text-align: center;
+        }
+
+        #turnday {
+            background-color: #555555;
+            color: white;
+        }
+
+
+        .layui-icon {
+            color: #00ff00;
+        }
     </style>
 </head>
 
 <body>
     <div class=" col-xs-4 col-xs-offset-4 mainoper">
-        <a href="/catalog/{{txtid}}" title=""><button class="btn btn-primary">回到目录</button></a>
-        <button class='btn' id='turnday' day={{isDay}}>夜间模式</button>
-        <button class="btn-sm fontsize" id='fontdown'>▽</button>
-        <button class="btn-sm fontsize" id='fontup'>△</button>
-        <button class="btn-sm fontsize" id='play'><i id='scroll' play='{{play}}' class="layui-icon layui-icon-play"></i></button>
+        <center>
+            <a href="/" title="">
+                <button class="btn" style="border:1px dashed #4CAF50;margin-left: 5px;">
+                    <img src="/static/imgs/home.png" width="18px">
+                </button>
+            </a>
+            <a href="/catalog/{{txtid}}" title="">
+                <button class="btn" style="border:1px dashed #008CBA">
+                    <img src="/static/imgs/catalog.png" width="18px" alt="">
+                </button>
+            </a>
+            <button class='btn' style="border:1px dashed #c3c3c3;" id='turnday' day={{isDay}}>
+                <img src="/static/imgs/dark.png" width="18px" id='dayimg' alt="">
+            </button>
+            <button style="border:1px dashed #676767;" id='play' class='btn'>
+                <i id='scroll' play='{{play}}' class="layui-icon layui-icon-play" style="color:#8c1aff"></i>
+            </button>
+            <button style="border:1px dashed #f44336;" class='btn' id='fontdown'><span class="glyphicon glyphicon-minus-sign"></span></button>
+            <button style="border:1px dashed #cc6600;" class='btn' id='fontup'><span class="glyphicon glyphicon-plus-sign"></span></button>
+            <a href="/show/{{txtid}}/{{chapter.id - 1}}" id='preC'>
+                <button style="border:1px dashed #555555;" class='btn' id='prebtn'>
+                    <i id='scroll' play='{{play}}' class="layui-icon layui-icon-prev" style="color:#ff9980"></i>
+                </button>
+            </a>
+            <a href="/show/{{txtid}}/{{chapter.id + 1}}" id='next'>
+                <button style="border:1px dashed #555555;" class='btn' id='nextbtn'>
+                    <i id='scroll' play='{{play}}' class="layui-icon layui-icon-next" style="color:#ff661a"></i>
+                </button>
+            </a>
+        </center>
+        
     </div>
-    <div class=" col-md-6 col-md-offset-3 jumbotron">
-        <div class="oper">
-            
-        </div>
-
+    <div class="jumbotron col-md-4 col-md-offset-4">
+        <input type="hidden" id='currid' value="{{chapter.id}}">
         <h3>{{ chapter.title }}</h3>
-        <pre id='pre' class='notranslate' style='font-size:{{fontsize}}px;'>
+        <pre id='{{chapter.id}}' class='notranslate' style='font-size:{{fontsize}}px;'>
 {% for line in chapter.content%}
-{{line}}{% endfor %}
-<button id='toTop' class="btn-sm btn-info" style="float:right">回到顶部</button>
-
-<a href="/show/{{txtid}}/{{chapter.id - 1}}"><button class='btn-lg btn-warning' style="float:left">上一章</button></a><a href="/show/{{txtid}}/{{chapter.id + 1}}" id='next'><button class='btn-lg btn-success' id='nextbtn' style="float:right">下一章</button></a>
-        </pre>
+<a id='{{loop.index}}'></a>{{line}}
+{% endfor %}</pre>
     </div>
+    <center class="waitnextchapter" hidden="hidden">
+        <!-- <i id='scroll' play='{{play}}' width="30px" class="layui-icon layui-icon-loading"></i> -->
+        <img src="/static/imgs/loading.gif" alt="">
+    </center>
 </body>
 
 </html>

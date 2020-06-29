@@ -11,10 +11,10 @@ done
 while true
 do
     PID_EXIST=$(netstat -ntalp |grep 8889 | awk '{print $7}' | awk 'BEGIN{FS="/";OFS=" "} {print $1}')
-    if [ ! -n "$PID_EXIST" ];then
-        break
-    else
+    if [ $PID_EXIST ];then
         echo $PID_EXIST
         kill -9 $PID_EXIST
+    else
+        break
     fi
 done

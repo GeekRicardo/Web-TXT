@@ -22,6 +22,7 @@ class TXT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
     author = db.Column(db.String(50))
+    url = db.Column(db.String(100))
 
     def __str__(self):
         return "[{}] - ({})".format(self.title, self.author)
