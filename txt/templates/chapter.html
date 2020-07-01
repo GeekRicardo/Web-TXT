@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ chapter.title }}</title>
+    <link rel="shortcut icon " type="images/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/layui.css">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdn.bootcss.com/clipboard.js/2.0.4/clipboard.min.js"></script> -->
+    <script>
+        $(function () {
+            if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+                //移动端
+            } else {
+                //pc端
+                /*var p1, p2;
+                var isSlip = false;
+                $('html').mousedown(function (e) {
+                    if (e.button == 0) {
+                        p1 = [e.pageX, e.pageY];
+                        //console.log(e);
+                        isSlip = true;
+                    }
+                });
+                $('html').mouseup(function (e) {
+                    if (e.button == 0) {
+                        p2 = [e.pageX, e.pageY];
+                        //console.log(p2);
+                        if (isSlip) {
+                            if (p2[0] - p1[0] >= 100 && p2[1] - p1[1] <= 100) {
+
+                                $('#nextbtn').click();
+                            } else if (p1[0] - p2[0] >= 100 && p1[1] - p2[1] <= 100) {
+                                $('#prebtn').click();
+                            }
+                        }
+                        isSlip = false;
+                    }
+                });*/
+            }
+            //禁止右键菜单
+            document.oncontextmenu = function () {
+                event.returnValue = false;
+            };
+
+            var isLoad = false;
+            setDayStyle({{isDay}});
+            var timer;
+            setTimeout(autoscroll, 3000);
+            $(window).scroll(function () {
+                getNextChapter();
+            });
+
+            function getCurrPosition(){
+                var lines = $('.content:last > p');
+                for(var i = 0; i < lines.length;i++){
+                    if($(p).offset().top <= $(window).height() + $(window).scrollTop()/2){
+                        //p进入用户上半边视野
+
+                    }
+                }
+            }
+
+            //滚动最后自动加载下一章
+            function getNextChapter(){
+                var scrollTop = $(window).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(window).height();
+                var restHeight = scrollHeight - scrollTop - windowHeight;
+                if (restHeight <= 100 && isLoad == false) {
+                    $('.waitnextchapter').show();
+                    var currid = $('#currid');
+                    var curr = parseInt(currid.val());
+                    isLoad = true;
+                    getChapter(curr+1);
+                }else if(restHeight > 100 && isLoad == true){
+                    isLoad = false;
+                }
+            }
+
+            CanvasRenderingContext2D.prototype.wrapText = function (text, x, y, maxWidth, lineHeight) {
+                if (typeof text != 'string' || typeof x != 'number' || typeof y != 'number') {
+                    return;
+                }
+                
+                var context = this;
+                var canvas = context.canvas;
+                
+                if (typeof maxWidth == 'undefined') {
+                    maxWidth = (canvas && canvas.width) || 300;
+                }
+                if (typeof lineHeight == 'undefined') {
+                    lineHeight = (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) || parseInt(window.getComputedStyle(document.body).lineHeight);
+                }
+                
+                // 字符分隔为数组
+                var arrText = text.split('');
+                var line = '';
+                
+                for (var n = 0; n < arrText.length; n++) {
+                    var testLine = line + arrText[n];
+                    var metrics = context.measureText(testLine);
+                    var testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        context.fillText(line, x, y);
+                        line = arrText[n];
+                        y += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                context.fillText(line, x, y);
+                return y+lineHeight
+            };
+
+            //getChapter({{chapter.id}});
+            //获取某一章
+            function getChapter(curr){
+                $.ajax({
+                    url: '/show/{{txtid}}/' + curr ,
+                    type: 'POST',
+                    success: function(data){
+                        if(data.success == 0){
+                            document.title = data.title;
+                            var currid = $('#currid');
+                            var lastcontent = $($('.content:last')[0]);
+                            var jumbotron = $($('.jumbotron')[0]);
+                            var nextcontent;
+                            /*if($('#isFirst').val() != 'true'){
+                            }else{
+                                nextcontent = lastcontent;
+                                $('#isFirst').val('false');
+                            }*/
+                            nextcontent = $('<div class="content notranslate"></div>');
+                            
+                            isDay = $('#turnday').attr('day');
+                            jumbotron.append($('<h3>'+data.title+'</h3>'));
+                            jumbotron.append(nextcontent);
+                            for(var i = 0; i < data.content.length; i++){
+                                nextcontent.append($('<p>'+data.content[i]+'</p>'));
+                            }
+                            setDayStyle(isDay);
+                            /*var ctx = nextcontent.getContext('2d');
+                            ctx.fillStyle = "black";
+                            ctx.font = "8px '微软雅黑'";
+                            ctx.textAlign = "left";
+                            ctx.textBaseline = 'top';
+                            var lineHeight = 0;
+                            for(var i = 0; i < data.content.length; i++){
+                                if(data.content[i] != ''){
+                                    lineHeight = ctx.wrapText(data.content[i], 0, lineHeight);
+                                }
+                            }*/
+
+                            
+                            //修改下一章按钮链接
+                            var nexta = $('#next');
+                            $('#preC').attr('href', '/show/{{txtid}}/' + curr);
+                            nexta.attr('href', '/show/{{txtid}}/' + (curr + 1));
+                            currid.val(curr)
+                            //修改地址栏
+                            var stateObject = {};
+                            var title = data.title;
+                            $('#title').text = data.title;
+                            var newUrl = "/show/{{txtid}}/" + (curr + 1);//修改从项目名后开始
+                            history.pushState(stateObject,title,newUrl);
+                        }
+                        $('.waitnextchapter').hide();
+                    }
+                })
+            }
+            
+            $('#turnday').click(function () {
+                isDay = $('#turnday').attr('day');
+                if(isDay == 'day'){
+                    isDay = 'night';
+                }else{
+                    isDay = 'day';
+                }
+                setDayStyle(isDay);
+            });
+            
+            $('#fontup').click(function () {
+                var cssfontSize = $('p').css('font-size');
+                var unit = cssfontSize.slice(-2);
+                var fontSize = parseFloat(cssfontSize);
+                $('p').css('font-size', (fontSize + 1) + unit);
+                setFontsize2Base(fontSize + 1);
+            })
+            
+            $('#fontdown').click(function () {
+                var cssfontSize = $('p').css('font-size');
+                var unit = cssfontSize.slice(-2);
+                var fontSize = parseFloat(cssfontSize);
+                $('p').css('font-size', (fontSize - 1) + unit);
+                setFontsize2Base(fontSize - 1);
+            })
+
+            function setFontsize2Base(size) {
+                $.ajax({
+                    url: '/setfont/' + size,
+                    method: 'GET',
+                })
+            }
+            
+            function setDay2Base(isDay) {
+                $.ajax({
+                    url: '/setDay/' + isDay,
+                    type: 'GET'
+                });
+            }
+            
+            function setDayStyle(isDay) {
+                if (isDay == 'night') {
+                    //切换成黑夜模式
+                    $("html").css("backgroundColor", "#000");
+                    $(".jumbotron").css("backgroundColor", "#0d0d0d");
+                    $(".mainoper").css("backgroundColor", "#0d0d0d");
+                    $(".content").css("backgroundColor", "#0d0d0d");
+                    $(".content").css("color", "#737373");
+                    $('.fontsize').css('color', '#939392');
+                    $('#turnday').css('background-color', '#e7e7e7');
+                    $('#turnday').css('color', 'black');
+                    $('#turnday').attr('day', 'night');
+                    $('#dayimg').attr('src', '/static/imgs/day.png');
+                    setDay2Base('night');
+                } else if (isDay == 'day') {
+                    //切换成白天模式
+                    $("body").css("backgroundColor", "#bfbfbf");
+                    $(".jumbotron").css("backgroundColor", "#f2f2f2");
+                    $(".mainoper").css("backgroundColor", "#f2f2f2");
+                    $(".content").css("backgroundColor", "#d9d9d9");
+                    $(".content").css("color", "black");
+                    $('.fontsize').css('color', 'black');
+                    $('#turnday').attr('day', 'day');
+                    $('#turnday').css('background-color', '#555555');
+                    $('#turnday').css('color', '#939392');
+                    $('#dayimg').attr('src', '/static/imgs/dark.png');
+                    setDay2Base('day');
+                }
+            }
+
+            $('#toTop').click(function () {
+                $('html,body').animate({ scrollTop: 0 }, 500);
+            });
+
+            function scroller() {
+                //  自动滚动
+                if (true) {
+                    yScroll = document.documentElement.scrollTop;
+                    xScroll = document.documentElement.scrollLeft;
+                    position = yScroll + 1;
+                    scroll(xScroll, position);
+                }
+            }
+
+            //自动播放
+            $('#play').click(function () {
+                autoscroll();
+            });
+
+            document.addEventListener("touchmove", function (e) {
+                var icon = $('#scroll');
+                icon.removeClass('layui-icon-radio');
+                icon.addClass('layui-icon-circle-dot');
+                clearInterval(timer);
+            }, false);
+
+            document.addEventListener("touchend", function (e) {
+                var icon = $('#scroll');
+                if (icon.attr('play') == 'played') {
+                    icon.removeClass('layui-icon-play');
+                    icon.addClass('layui-icon-radio');
+                    icon.css('color', '#ff5500');
+                    clearInterval(timer);
+                    timer = setInterval(scroller, 20);
+                } else {
+                }
+            }, false);
+            //后台唤醒自动刷新最新章节
+            /*document.addEventListener("visibilitychange", function() {
+                if(!document.hidden ){
+                    window.location.href = '/show/{{txtid}}/-1'
+                }
+            });*/
+
+            //移动端禁止双指缩放
+            document.addEventListener('gesturestart', function (event) {
+                event.preventDefault();
+            });
+            //设置自动滚动按钮样式以及发送至后台
+            function autoscroll() {
+                var icon = $('#scroll');
+                if (icon.attr('play') == 'stop') {
+                    icon.removeClass('layui-icon-play');
+                    icon.addClass('layui-icon-radio');
+                    icon.attr('play', 'played');
+                    icon.css('color', '#ff3333');
+                    clearInterval(timer);
+                    timer = setInterval(scroller, 20);
+                    $.ajax({
+                        url: '/setScroll/stop',
+                        type: 'GET'
+                    });
+                } else if (icon.attr('play') == 'played') {
+                    icon.removeClass('layui-icon-radio');
+                    icon.addClass('layui-icon-play');
+                    icon.attr('play', 'stop');
+                    icon.css('color', '#8c1aff');
+                    clearInterval(timer);
+                    $.ajax({
+                        url: '/setScroll/played',
+                        type: 'GET'
+                    });
+                }
+                
+            }
+
+        })
+    </script>
+<!-- -------------- -->
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            /*padding-left: 5px;
+        padding-right: 5px;*/
+            -moz-user-select: none;
+            /*火狐*/
+            -webkit-user-select: none;
+            /*webkit浏览器*/
+            -ms-user-select: none;
+            /*IE10*/
+            -khtml-user-select: none;
+            /*早期浏览器*/
+            user-select: none;
+        }
+
+        .jumbotron {
+            width: 100%;
+            /*padding: 5px;
+            margin: auto auto;
+            margin-top: 30%;
+            height: 100%;*/
+            z-index: 99;
+        }
+
+        .oper {
+            position: fixed;
+            top: 50%;
+            right: 1%;
+            z-index: 100;
+        }
+
+        .mainoper {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            margin: auto auto;
+            padding-left: 1%;
+            padding-bottom: 2px;
+            z-index: 999;
+            background-color: #f2f2f2;
+        }
+
+        button {
+            margin-left: 3px;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+
+        .content {
+            width: 100%;
+            /*text-indent: 2em;*/
+            padding: 1rem;
+            border: #ff9999 solid 1px;
+            background-color: #d9d9d9;
+        }
+
+        @font-face {
+        font-family: "SourceHanSansSC";
+            src: url("/static/fonts/SourceHanSansSC.woff2") format("woff2"),
+                url("/static/fonts/SourceHanSansSC.woff") format("woff"),
+                url("/static/fonts/SourceHanSansSC.ttf") format("truetype"),
+                url("/static/fonts/SourceHanSansSC.eot") format("embedded-opentype"),
+                url("/static/fonts/SourceHanSansSC.svg") format("svg");
+            font-weight: normal;
+            font-style: normal;
+        }
+        p {
+            font-size: {{fontsize}}px;
+            width: 100%;
+            font-family: "SourceHanSansSC";
+            text-indent: 2em;
+            margin:0;
+            padding: 0;
+            word-break:break-word;
+        }
+
+        h3 {
+            text-align: center;
+        }
+
+        #turnday {
+            background-color: #555555;
+            color: white;
+        }
+
+
+        .layui-icon {
+            color: #00ff00;
+        }
+
+        canvas {
+            width: 99%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class=" col-xs-4 col-xs-offset-4 mainoper">
+        <center>
+            <a href="/" title="">
+                <button class="btn" style="border:1px dashed #4CAF50;margin-left: 5px;">
+                    <img src="/static/imgs/home.png" width="18px">
+                </button>
+            </a>
+            <a href="/catalog/{{txtid}}" title="">
+                <button class="btn" style="border:1px dashed #008CBA">
+                    <img src="/static/imgs/catalog.png" width="18px" alt="">
+                </button>
+            </a>
+            <button class='btn' style="border:1px dashed #c3c3c3;" id='turnday' day={{isDay}}>
+                <img src="/static/imgs/dark.png" width="18px" id='dayimg' alt="">
+            </button>
+            <button style="border:1px dashed #676767;" id='play' class='btn'>
+                <i id='scroll' play='{{play}}' class="layui-icon layui-icon-play" style="color:#8c1aff"></i>
+            </button>
+            <button style="border:1px dashed #f44336;" class='btn' id='fontdown'><span class="glyphicon glyphicon-minus-sign"></span></button>
+            <button style="border:1px dashed #cc6600;" class='btn' id='fontup'><span class="glyphicon glyphicon-plus-sign"></span></button>
+            <a href="/show/{{txtid}}/{{chapter.id - 1}}" id='preC'>
+                <button style="border:1px dashed #555555;" class='btn' id='prebtn'>
+                    <i id='scroll' play='{{play}}' class="layui-icon layui-icon-prev" style="color:#ff9980"></i>
+                </button>
+            </a>
+            <a href="/show/{{txtid}}/{{chapter.id + 1}}" id='next'>
+                <button style="border:1px dashed #555555;" class='btn' id='nextbtn'>
+                    <i id='scroll' play='{{play}}' class="layui-icon layui-icon-next" style="color:#ff661a"></i>
+                </button>
+            </a>
+            <br>
+            <span id='title' style='font-size: 8px;'>{{chapter.title}}</span>
+        </center>
+        
+    </div>
+    <div class="jumbotron col-md-4">
+        <input type="hidden" id='currid' value="{{chapter.id}}">
+        <input type="hidden" id='isFirst' value="true">
+        <h3>{{ chapter.title }}</h3>
+        <!-- <canvas id='{{chapter.id}}' class='notranslate text' style='font-size:{{fontsize}}px;height: 600px;'>
+            </canvas> 
+        -->
+        <div class="content notranslate col-md-4">
+            {% for line in chapter.content%}
+                {%if line.strip() %}
+                <p>{{line}}</p>
+                {%endif%}
+            {% endfor %}
+        </div>
+
+    </div>
+    <center class="waitnextchapter" hidden="hidden">
+        <!-- <i id='scroll' play='{{play}}' width="30px" class="layui-icon layui-icon-loading"></i> -->
+        <img src="/static/imgs/loading.gif" alt="">
+    </center>
+</body>
+
+</html>

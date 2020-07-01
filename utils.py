@@ -13,7 +13,7 @@ import random
 import requests
 from bs4 import BeautifulSoup as Soup
 
-baseURL = 'https://www.biquge.com.cn/'
+baseURL = 'https://www.biquge5200.cc/'
 
 proxies = [
     {'http': 'http://ali.sshug.cn:9587'},
@@ -47,12 +47,12 @@ headers = [
 cookie = None
 
 def searcherTxt(txtTitle):
-    path = 'search.php?q='
+    path = 'modules/article/search.php?searchkey='
     res = requests.get(baseURL + path + txtTitle, proxies=random.choice(proxies), headers = random.choice(headers))
     if res.status_code == 200:
         results = []
         soup = Soup(res.text, 'html.parser')
-        alldiv = soup.select('.result-game-item .result-game-item-detail')
+        alldiv = soup.select('.grid tr')
         for div in alldiv:
             results.append({
                 'title': div.find('h3').text.strip(),
@@ -67,7 +67,9 @@ def searcherTxt(txtTitle):
         return None
 
 def getChapter(txtURL):
-    res = requests.get(baseURL + txtURL, proxies=random.choice(proxies), headers = random.choice(headers))
+    uri = baseURL + txtURL.lstrip('/') + '/'
+    print(uri)
+    res = requests.get(uri, headers = random.choice(headers), proxies=random.choice(proxies))
     if res.status_code == 200:
         results = []
         global cookie
@@ -77,22 +79,24 @@ def getChapter(txtURL):
         links = soup.select('#list a')
         infodiv = soup.find('div', attrs={'id':'maininfo'})
         title = infodiv.find('h1').text
-        author = infodiv.find('p').text.split(':')[1]
+        author = infodiv.find('p').text.split('：')[1]
         for a in links:
             results.append((a.text, a['href']))
         return {'title':title, 'author':author, 'url': txtURL}, results
     else:
-        print(res.status_code, res.text)
-        return None
+        print('getChapter - ', res.status_code, res.text)
+        return None, None
 
 def getContent(chapterURL):
-    res = requests.get(baseURL + chapterURL, headers = random.choice(headers))
+    uri = baseURL + chapterURL.lstrip('/')
+    print(uri)
+    res = requests.get(baseURL + chapterURL)#, proxies=random.choice(proxies), headers = random.choice(headers), cookies=cookie)
     if res.status_code == 200:
         results = []
         soup = Soup(res.text, 'html.parser')
         content = soup.find('div', attrs={'id': 'content'}).text.replace('\xa0\xa0\xa0\xa0', '\n')
         return content
     else:
-        print(res.status_code, res.text)
+        print('getContent - ', res.status_code, res.text)
         return None
 

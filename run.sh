@@ -13,4 +13,4 @@ do
     rm ${path}/pid/${filename}
 done
 
-nohup sudo python3 ${path}/main.py > /dev/null 2>&1 & echo  $! > ${path}/pid/$! |tee $!
+nohup sudo python3 ${path}/main.py > /dev/null 2>&1 & echo  $! | tee ${path}/pid/$!

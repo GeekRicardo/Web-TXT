@@ -186,16 +186,18 @@ def showChapter(txtid, chapterid):
                 redis.set(str(txtid), chapterid)
             redis.set('txtid', txtid)
             isScroll = request.cookies.get('play') or 'stop'
-            isDay = 'false' if request.cookies.get('isDay') == 'true' or request.cookies.get('isDay') == None else 'true'
-            fontsize = request.cookies.get('size') or '18'
+            isDay = 'day' if request.cookies.get('isDay') == 'night' or request.cookies.get('isDay') == None else 'day'
+            fontsize = request.cookies.get('size') or '16'
             return render_template('chapter.html', chapter=chapter, txtid=txtid, isDay=isDay, fontsize=fontsize, play=isScroll, nextchapterid=chapterid+1)
         else:
             # return render_template('index.html', msg='错误✖.')
             return redirect(url_for('index'))
     else:
+        if(chapterid== -1):
+            chapterid = redis.get(str(txtid))
         chapter = db.session.query(Chapter).filter_by(txtid=txtid, id=chapterid).first()
         if chapter:
-            chapter.content = chapter.content.replace('\n', '\n\n')
+            chapter.content = chapter.content.split('\n')
             oldchapter = redis.get(txtid) or -1
             if int(oldchapter) < chapterid:
                 redis.set(str(txtid), chapterid)
@@ -225,6 +227,7 @@ def searchTxt():
 
 @app.route('/download/book/<room>', endpoint='downloadTxt')
 def downloadTxt(room):
+    print('room', room)
     info, chapters = getChapter('/book/' + room)
     newtxt = TXT()
     newtxt.title = info['title']

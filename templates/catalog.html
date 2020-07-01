@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"  name="viewport" />
-    <title>{{txt.title}} - {{txt.author}}</title>
+    <title>{%if txt %}{{txt.title}} - {{txt.author}}{%endif%}</title>
     <link rel="shortcut icon " type="images/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <!-- <link rel="stylesheet" href="static/dialog/dialog.css"> -->
@@ -90,7 +90,7 @@
             <a href="/" title="">
                 <button class="btn btn-primary">回到首页</button>
             </a><br>
-            {% if history is not none %}
+            {% if txt and history %}
             <a href="/show/{{txt.id}}/{{history}}" title="">
                 <button class="btn btn-warning">历 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 史</button>
             </a><br>
@@ -117,8 +117,8 @@
         
         {% if results is not none %}
         <ul class="list-group">
-            {% for result in results %}
-            <a href="/download/{{result['url']}}">
+            {% for catalog in results %}
+            <a href="/download/{{catalog['url'].strip('/')}}">
                 <li class="list-group-item">
                     {{catalog['title']}} - {{catalog['author']}}
                 </li>

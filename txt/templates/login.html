@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <title>登陆</title>
+    <style>
+        html, body {
+            width: 100%;
+            height:100%;
+            margin: auto;
+            top:0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+        }
+        .content_r {
+            width:100%;
+            height:100%;
+        }
+        .content_r .loginBox,
+        .content_r .registerBox {
+            width: 320px;
+            height: 230px;
+            padding: 15px;
+            background-color: white;
+            margin: auto;
+            top:0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+        }
+
+            .content_r .loginBox .loginTitle,
+            .content_r .registerBox .registerTitle,
+            .userinformation .userTitle {
+                width: 100%;
+                height: 40px;
+            }
+
+                .content_r .loginBox .loginTitle .loginText,
+                .userinformation .userTitle .userText,
+                .content_r .registerBox .registerTitle .registerText {
+                    width: 64px;
+                    height: 40px;
+                    line-height: 50px;
+                    float: left;
+                }
+
+                .content_r .loginBox .loginTitle .font20,
+                .content_r .registerBox .registerTitle .font20
+                {
+                    border-bottom: 1px solid orange;
+                }
+
+                .content_r .loginBox .loginTitle .loginLine,
+                .content_r .registerBox .registerTitle .registerLine {
+                    border-bottom: 1px solid lightgray;
+                    height: 40px;
+                    width: 256px;
+                    float: left;
+                }
+
+                .content_r .loginBox .loginTitle .alignr,
+                .content_r .registerBox .registerTitle .alignr {
+                    text-align: right;
+                    font-size: 14px;
+                    color: gray;
+                }
+
+                .content_r .loginBox .loginTitle .input_box,
+                .content_r .registerBox .registerTitle .input_box {
+                    height: 40px;
+                    width: 256px;
+                    float: left;
+                    padding-top: 10px;
+                }
+
+                    .content_r .loginBox .loginTitle .input_box input,
+                    .content_r .registerBox .registerTitle .input_box input {
+                        width: 220px;
+                        height: 25px;
+                    }
+
+                    .content_r .loginBox .loginTitle .input_box .loginbtn,
+                    .content_r .registerBox .registerTitle .input_box .loginbtn {
+                        background-color: orange;
+                        color: white;
+                        width: 224px;
+                        border-radius: 5px;
+                        height: 30px;
+                        border: none;
+                    }
+
+            .content_r .loginBox .alignr,
+            .content_r .registerBox .alignr {
+                text-align: right;
+                font-size: 14px;
+                height: 20px;
+                float: right;
+            }
+
+                .content_r .loginBox .alignr a,
+                .content_r .registerBox .alignr a {
+                    text-decoration: none;
+                    color: green;
+                }
+
+            .content_r .loginBox .tips {
+                text-align: center;
+                color: coral;
+                float: right;
+                padding-top: 3px;
+                font-size: 14px;
+            }
+    </style>
+</head>
+<body>
+    <div class="content_r">
+        <!--登录部分-->
+        <div id="loginBox" class="loginBox">
+            <form method="post" action="/login">
+                <!--登录标题部分-->
+                <div class="loginTitle">
+                    <div class="loginText font20">登录</div>
+                    <div class="loginLine "></div>
+                    <div class="loginText alignr">用户名： </div>
+                    <div class="input_box">
+                        <input type="text" name="username">
+                    </div>
+                </div>
+                <!--登录标题结尾部分-->
+                <!--登录标题部分-->
+                <div class="loginTitle">
+                    <div class="loginText alignr">密码： </div>
+                    <div class="input_box">
+                        <input type="password" name="pwd">
+                    </div>
+                </div>
+                <!--登录标题结尾部分-->
+                <!--登录标题部分-->
+                <div class="loginTitle">
+                    <div class="loginText alignr"></div>
+                    <div class="input_box">
+                        <input type="submit" value="登录" class="loginbtn">
+                    </div>
+                </div>
+            </form>
+            <!--登录标题结尾部分-->
+            <!--登录标题部分-->
+            <!--<div class="loginTitle alignr">
+                <span>还没注册？</span>
+                <a id="registera" href="javascript:void (0);">马上注册</a>
+            </div>-->
+            <!--登录标题结尾部分-->
+            <p class="tips">
+                <!--密码不能为空-->
+            </p>
+        </div>
+        <!--登录部分结尾-->
+</body>
+
+</html>

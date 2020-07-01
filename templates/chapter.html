@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zn_ch">
+<html lang="zh_cn">
 
 <head>
     <meta charset="utf-8">
@@ -18,7 +18,7 @@
                 //移动端
             } else {
                 //pc端
-                var p1, p2;
+                /*var p1, p2;
                 var isSlip = false;
                 $('html').mousedown(function (e) {
                     if (e.button == 0) {
@@ -41,7 +41,7 @@
                         }
                         isSlip = false;
                     }
-                });
+                });*/
             }
             //禁止右键菜单
             document.oncontextmenu = function () {
@@ -49,127 +49,199 @@
             };
 
             var isLoad = false;
-            setDayStyle();
+            setDayStyle({{isDay}});
             var timer;
             setTimeout(autoscroll, 3000);
-            //滚动最后自动加载下一章
             $(window).scroll(function () {
-                
-                //getNextChapter();
-                var scrollTop = $(this).scrollTop();
+                getNextChapter();
+            });
+
+            function getCurrPosition(){
+                var lines = $('.content:last > p');
+                for(var i = 0; i < lines.length;i++){
+                    if($(p).offset().top <= $(window).height() + $(window).scrollTop()/2){
+                        //p进入用户上半边视野
+
+                    }
+                }
+            }
+
+            //滚动最后自动加载下一章
+            function getNextChapter(){
+                var scrollTop = $(window).scrollTop();
                 var scrollHeight = $(document).height();
-                var windowHeight = $(this).height();
+                var windowHeight = $(window).height();
                 var restHeight = scrollHeight - scrollTop - windowHeight;
                 if (restHeight <= 100 && isLoad == false) {
                     $('.waitnextchapter').show();
                     var currid = $('#currid');
                     var curr = parseInt(currid.val());
                     isLoad = true;
-                    $.ajax({
-                        url: '/show/{{txtid}}/' + (curr + 1) ,
-                        type: 'POST',
-                        success: function(data){
-                            if(data.success == 0){
-                                let nextpre = $('pre:last').clone(true);
-                                let nexttitle = $('<h3>' + data.title + '</h3>').css('margin', '20px');
-                                document.title = data.title;
-                                nextpre.text(data.content);
-                                nextpre.attr('id', '' + (curr + 1));
-                                $('#' + curr).after(nextpre);
-                                $('#' + curr).after(nexttitle);
-                                //修改下一章按钮链接
-                                var nexta = $('#next');
-                                $('#preC').attr('href', nexta.attr('href'));
-                                nexta.attr('href', '/show/{{txtid}}/' + (curr + 2));
-                                currid.val(curr + 1)
-                                //修改地址栏
-                                var stateObject = {};
-                                var title = data.title;
-                                var newUrl = "/show/{{txtid}}/" + (curr + 1);//修改从项目名后开始
-                                history.pushState(stateObject,title,newUrl);
-                            }
-                            $('.waitnextchapter').hide();
-                        }
-                    })
+                    getChapter(curr+1);
                 }else if(restHeight > 100 && isLoad == true){
                     isLoad = false;
                 }
-            });
+            }
+
+            CanvasRenderingContext2D.prototype.wrapText = function (text, x, y, maxWidth, lineHeight) {
+                if (typeof text != 'string' || typeof x != 'number' || typeof y != 'number') {
+                    return;
+                }
+                
+                var context = this;
+                var canvas = context.canvas;
+                
+                if (typeof maxWidth == 'undefined') {
+                    maxWidth = (canvas && canvas.width) || 300;
+                }
+                if (typeof lineHeight == 'undefined') {
+                    lineHeight = (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) || parseInt(window.getComputedStyle(document.body).lineHeight);
+                }
+                
+                // 字符分隔为数组
+                var arrText = text.split('');
+                var line = '';
+                
+                for (var n = 0; n < arrText.length; n++) {
+                    var testLine = line + arrText[n];
+                    var metrics = context.measureText(testLine);
+                    var testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        context.fillText(line, x, y);
+                        line = arrText[n];
+                        y += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                context.fillText(line, x, y);
+                return y+lineHeight
+            };
+
+            //getChapter({{chapter.id}});
+            //获取某一章
+            function getChapter(curr){
+                $.ajax({
+                    url: '/show/{{txtid}}/' + curr ,
+                    type: 'POST',
+                    success: function(data){
+                        if(data.success == 0){
+                            document.title = data.title;
+                            var currid = $('#currid');
+                            var lastcontent = $($('.content:last')[0]);
+                            var jumbotron = $($('.jumbotron')[0]);
+                            var nextcontent;
+                            /*if($('#isFirst').val() != 'true'){
+                            }else{
+                                nextcontent = lastcontent;
+                                $('#isFirst').val('false');
+                            }*/
+                            nextcontent = $('<div class="content notranslate"></div>');
+                            
+                            isDay = $('#turnday').attr('day');
+                            jumbotron.append($('<h3>'+data.title+'</h3>'));
+                            jumbotron.append(nextcontent);
+                            for(var i = 0; i < data.content.length; i++){
+                                nextcontent.append($('<p>'+data.content[i]+'</p>'));
+                            }
+                            setDayStyle(isDay);
+                            /*var ctx = nextcontent.getContext('2d');
+                            ctx.fillStyle = "black";
+                            ctx.font = "8px '微软雅黑'";
+                            ctx.textAlign = "left";
+                            ctx.textBaseline = 'top';
+                            var lineHeight = 0;
+                            for(var i = 0; i < data.content.length; i++){
+                                if(data.content[i] != ''){
+                                    lineHeight = ctx.wrapText(data.content[i], 0, lineHeight);
+                                }
+                            }*/
+
+                            
+                            //修改下一章按钮链接
+                            var nexta = $('#next');
+                            $('#preC').attr('href', '/show/{{txtid}}/' + curr);
+                            nexta.attr('href', '/show/{{txtid}}/' + (curr + 1));
+                            currid.val(curr)
+                            //修改地址栏
+                            var stateObject = {};
+                            var title = data.title;
+                            $('#title').text = data.title;
+                            var newUrl = "/show/{{txtid}}/" + (curr + 1);//修改从项目名后开始
+                            history.pushState(stateObject,title,newUrl);
+                        }
+                        $('.waitnextchapter').hide();
+                    }
+                })
+            }
             
             $('#turnday').click(function () {
-                setDayStyle();
+                isDay = $('#turnday').attr('day');
+                if(isDay == 'day'){
+                    isDay = 'night';
+                }else{
+                    isDay = 'day';
+                }
+                setDayStyle(isDay);
             });
             
             $('#fontup').click(function () {
-                var cssfontSize = $('pre').css('font-size');
+                var cssfontSize = $('p').css('font-size');
                 var unit = cssfontSize.slice(-2);
                 var fontSize = parseFloat(cssfontSize);
-                $('pre').css('font-size', (fontSize + 2) + unit);
-                setFontsize(fontSize + 2);
+                $('p').css('font-size', (fontSize + 1) + unit);
+                setFontsize2Base(fontSize + 1);
             })
             
             $('#fontdown').click(function () {
-                var cssfontSize = $('pre').css('font-size');
+                var cssfontSize = $('p').css('font-size');
                 var unit = cssfontSize.slice(-2);
                 var fontSize = parseFloat(cssfontSize);
-                $('pre').css('font-size', (fontSize - 2) + unit);
-                setFontsize(fontSize - 2);
+                $('p').css('font-size', (fontSize - 1) + unit);
+                setFontsize2Base(fontSize - 1);
             })
 
-            function setFontsize(size) {
+            function setFontsize2Base(size) {
                 $.ajax({
                     url: '/setfont/' + size,
                     method: 'GET',
                 })
             }
             
-            function setDay(isDay) {
-                if (isDay == 'true') {
-                    $.ajax({
-                        url: '/setDay/1',
-                        type: 'GET'
-                    })
-                } else if (idDay == 'false') {
-                    $.ajax({
-                        url: '/setDay/0',
-                        type: 'GET'
-                    })
-                }
+            function setDay2Base(isDay) {
+                $.ajax({
+                    url: '/setDay/' + isDay,
+                    type: 'GET'
+                });
             }
             
-            function setDayStyle() {
-                isDay = $('#turnday').attr('day');
-                if (isDay == 'true') {
+            function setDayStyle(isDay) {
+                if (isDay == 'night') {
                     //切换成黑夜模式
                     $("html").css("backgroundColor", "#000");
                     $(".jumbotron").css("backgroundColor", "#0d0d0d");
                     $(".mainoper").css("backgroundColor", "#0d0d0d");
-                    $("pre").css("backgroundColor", "#0d0d0d");
-                    $("pre").css("color", "#737373");
+                    $(".content").css("backgroundColor", "#0d0d0d");
+                    $(".content").css("color", "#737373");
                     $('.fontsize').css('color', '#939392');
                     $('#turnday').css('background-color', '#e7e7e7');
                     $('#turnday').css('color', 'black');
-                    $('#turnday').attr('day', false);
+                    $('#turnday').attr('day', 'night');
                     $('#dayimg').attr('src', '/static/imgs/day.png');
-                    $.ajax({
-                        url: '/setDay/false',
-                        type: 'GET'
-                    })
-                } else if (isDay == 'false') {
+                    setDay2Base('night');
+                } else if (isDay == 'day') {
                     //切换成白天模式
-                    $("body").css("backgroundColor", "#f2f2f2");
+                    $("body").css("backgroundColor", "#bfbfbf");
                     $(".jumbotron").css("backgroundColor", "#f2f2f2");
                     $(".mainoper").css("backgroundColor", "#f2f2f2");
-                    $("pre").css("backgroundColor", "#d9d9d9");
+                    $(".content").css("backgroundColor", "#d9d9d9");
+                    $(".content").css("color", "black");
                     $('.fontsize').css('color', 'black');
-                    $('#turnday').attr('day', true);
+                    $('#turnday').attr('day', 'day');
                     $('#turnday').css('background-color', '#555555');
                     $('#turnday').css('color', '#939392');
                     $('#dayimg').attr('src', '/static/imgs/dark.png');
-                    $.ajax({
-                        url: '/setDay/true',
-                        type: 'GET'
-                    })
+                    setDay2Base('day');
                 }
             }
 
@@ -187,6 +259,7 @@
                 }
             }
 
+            //自动播放
             $('#play').click(function () {
                 autoscroll();
             });
@@ -220,7 +293,7 @@
             document.addEventListener('gesturestart', function (event) {
                 event.preventDefault();
             });
-            
+            //设置自动滚动按钮样式以及发送至后台
             function autoscroll() {
                 var icon = $('#scroll');
                 if (icon.attr('play') == 'stop') {
@@ -270,8 +343,8 @@
         }
 
         .jumbotron {
-            /*width: 100%;
-            padding: 5px;
+            width: 100%;
+            /*padding: 5px;
             margin: auto auto;
             margin-top: 30%;
             height: 100%;*/
@@ -291,7 +364,7 @@
             top: 0;
             margin: auto auto;
             padding-left: 1%;
-            padding-bottom: 5px;
+            padding-bottom: 2px;
             z-index: 999;
             background-color: #f2f2f2;
         }
@@ -302,17 +375,32 @@
             margin-top: 5px;
         }
 
-        pre {
-            white-space: pre-wrap;
-            font-size: 18px;
+        .content {
+            width: 100%;
             /*text-indent: 2em;*/
             padding: 1rem;
             border: #ff9999 solid 1px;
-            font-family: 方正启体简体, "Microsoft YaHei", 微软雅黑, 宋体;
+            background-color: #d9d9d9;
         }
 
+        @font-face {
+        font-family: "SourceHanSansSC";
+            src: url("/static/fonts/SourceHanSansSC.woff2") format("woff2"),
+                url("/static/fonts/SourceHanSansSC.woff") format("woff"),
+                url("/static/fonts/SourceHanSansSC.ttf") format("truetype"),
+                url("/static/fonts/SourceHanSansSC.eot") format("embedded-opentype"),
+                url("/static/fonts/SourceHanSansSC.svg") format("svg");
+            font-weight: normal;
+            font-style: normal;
+        }
         p {
-            font-family: 方正启体简体, "Microsoft YaHei", 微软雅黑, 宋体;
+            font-size: {{fontsize}}px;
+            width: 100%;
+            font-family: "SourceHanSansSC";
+            text-indent: 2em;
+            margin:0;
+            padding: 0;
+            word-break:break-word;
         }
 
         h3 {
@@ -327,6 +415,10 @@
 
         .layui-icon {
             color: #00ff00;
+        }
+
+        canvas {
+            width: 99%;
         }
     </style>
 </head>
@@ -362,16 +454,26 @@
                     <i id='scroll' play='{{play}}' class="layui-icon layui-icon-next" style="color:#ff661a"></i>
                 </button>
             </a>
+            <br>
+            <span id='title' style='font-size: 8px;'>{{chapter.title}}</span>
         </center>
         
     </div>
-    <div class="jumbotron col-md-4 col-md-offset-4">
+    <div class="jumbotron col-md-4">
         <input type="hidden" id='currid' value="{{chapter.id}}">
+        <input type="hidden" id='isFirst' value="true">
         <h3>{{ chapter.title }}</h3>
-        <pre id='{{chapter.id}}' class='notranslate' style='font-size:{{fontsize}}px;'>
-{% for line in chapter.content%}
-<a id='{{loop.index}}'></a>{{line}}
-{% endfor %}</pre>
+        <!-- <canvas id='{{chapter.id}}' class='notranslate text' style='font-size:{{fontsize}}px;height: 600px;'>
+            </canvas> 
+        -->
+        <div class="content notranslate col-md-4">
+            {% for line in chapter.content%}
+                {%if line.strip() %}
+                <p>{{line}}</p>
+                {%endif%}
+            {% endfor %}
+        </div>
+
     </div>
     <center class="waitnextchapter" hidden="hidden">
         <!-- <i id='scroll' play='{{play}}' width="30px" class="layui-icon layui-icon-loading"></i> -->
